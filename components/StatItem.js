@@ -36,8 +36,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   statIcon: {
-    width: 34,
-    height: 34,
+    width: 24,
+    height: 24,
     borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.65)',
     alignItems: 'center',

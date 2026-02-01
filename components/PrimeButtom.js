@@ -9,6 +9,7 @@ function PrimeButton({
   disabled = false,
   loading = false,
   leftIcon = null,
+  size = 20,
 }) {
   const isDisabled = disabled || loading;
 
@@ -41,8 +42,8 @@ export default PrimeButton;
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 18, // ⬆️ גובה
-    paddingHorizontal: 28, // ⬆️ רוחב
+    paddingVertical: 12, // ⬆️ גובה
+    paddingHorizontal: 26, // ⬆️ רוחב
     minHeight: 56, // ⬆️ סטנדרט כפתור גדול
     borderRadius: 16, // ⬆️ יותר "רך"
 
