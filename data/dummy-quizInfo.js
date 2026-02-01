@@ -41,7 +41,7 @@ export const QuizInfos = [
   new QuizInfo(
     'quiz_history',
     'World History',
-    '#6D4C41',
+    '#000000ff',
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8RZ2Z7plUyv6ZfYtletCpzwHymvhqLOb5-w&s',
 
     ['history', 'general knowledge'],
