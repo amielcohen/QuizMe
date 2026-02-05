@@ -1,15 +1,20 @@
-import { StyleSheet, Text, View, Platform } from 'react-native';
+import { StyleSheet, Text, View, Platform, Button, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { TheColor } from './constant/TheColor';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+//redux
+import { Provider, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { store } from './store/redux/store';
+import { logout } from './store/redux/auth';
 
 //screens import
-//import CategoryScreen from './screens/CategoryScreen';
-//import MealsOverViewScreen from './screens/MealsOverVIewScreen';
-//import MealPage from './screens/MealPage';
+import LoginScreen from './screens/LoginScreen';
+import RegisterScreen from './screens/RegisterScreen';
+//user screen
 import UserHome from './screens/user/UserHome';
 import AllQuiz from './screens/user/AllQuiz';
 import FavouritesQuiz from './screens/user/FavouritesQuiz';
@@ -19,7 +24,18 @@ import QuizPage from './screens/user/QuizPage';
 const Stack = createNativeStackNavigator();
 const BottomTabs = createBottomTabNavigator();
 
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="log in" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+  );
+}
+
 function BottomTabsNavigator() {
+  const dispatch = useDispatch();
+
   return (
     <BottomTabs.Navigator
       screenOptions={{
@@ -29,6 +45,12 @@ function BottomTabsNavigator() {
         tabBarActiveTintColor: TheColor.primary100,
         headerTitleStyle: { fontWeight: 'bold' },
         headerTitleAlign: 'center',
+        headerRight: () => (
+          // may move logout button to other place
+          <Pressable onPress={() => dispatch(logout())} style={{ paddingHorizontal: 14 }}>
+            <Ionicons name="log-out-outline" size={22} color="white" />
+          </Pressable>
+        ),
       }}
     >
       <BottomTabs.Screen
@@ -64,28 +86,39 @@ function BottomTabsNavigator() {
   );
 }
 
+function AppStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: TheColor.primary100 },
+        headerTintColor: 'white',
+        headerTitleStyle: { fontWeight: 'bold' },
+        headerTitleAlign: 'center',
+      }}
+    >
+      <Stack.Screen
+        name="BottomTabsNavigator"
+        component={BottomTabsNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Quiz Page" component={QuizPage} />
+    </Stack.Navigator>
+  );
+}
+
+function RootNavigator() {
+  const isLogin = !!useSelector((state) => state.auth?.token);
+  return isLogin ? <AppStack /> : <AuthStack />;
+}
+
 export default function App() {
   return (
-    <>
+    <Provider store={store}>
       <StatusBar style="light" />
       <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: { backgroundColor: TheColor.primary100 },
-            headerTintColor: 'white',
-            headerTitleStyle: { fontWeight: 'bold' },
-            headerTitleAlign: 'center',
-          }}
-        >
-          <Stack.Screen
-            name="BottomTabsNavigator"
-            component={BottomTabsNavigator}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="Quiz Page" component={QuizPage} />
-        </Stack.Navigator>
+        <RootNavigator />
       </NavigationContainer>
-    </>
+    </Provider>
   );
 }
 

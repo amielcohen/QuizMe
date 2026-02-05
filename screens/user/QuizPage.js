@@ -9,8 +9,10 @@ import {
 import Tag from '../../components/Tag';
 import PrimeButton from '../../components/PrimeButtom';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { use, useState } from 'react';
 import StatItem from '../../components/StatItem';
+import { useDispatch, useSelector } from 'react-redux';
+import { addFavourite, removeFavourite } from '../../store/redux/favourite';
 
 function QuizPage({ route, navigation }) {
   const quizId = route.params.quizId;
@@ -26,6 +28,11 @@ function QuizPage({ route, navigation }) {
     { label: 'Best Score:', value: 1 + '/' + quiz.questionCount, icon: 'game-controller-outline' },
   ];
 
+  const favouriteQuizIds = useSelector((stats) => stats.favouriteQuiz.ids);
+  const quizIsFavourite = favouriteQuizIds.includes(quizId);
+
+  const dispatch = useDispatch();
+
   function handleStartQuiz() {
     //navigation.navigate('QuizScreen', { quizId: quiz.id });
     console.log('Start Quiz button pressed');
@@ -33,10 +40,14 @@ function QuizPage({ route, navigation }) {
 
   function handleAddToFavorites() {
     console.log('Add to Favorites button pressed');
-    if (isFavorite === false) {
-      setIsFavorite(true);
-    } else {
+    if (quizIsFavourite) {
+      console.log('Remove Favorites');
+      dispatch(removeFavourite({ id: quizId }));
       setIsFavorite(false);
+    } else {
+      console.log('Add Favorites');
+      dispatch(addFavourite({ id: quizId }));
+      setIsFavorite(true);
     }
   }
 
@@ -45,7 +56,7 @@ function QuizPage({ route, navigation }) {
       <View style={[styles.quizInfoContainer, { backgroundColor: quiz.color }]}>
         <View style={{ position: 'absolute', top: 16, right: 16 }}>
           <Ionicons
-            name={isFavorite ? 'heart' : 'heart-outline'}
+            name={quizIsFavourite ? 'heart' : 'heart-outline'}
             color={textColor}
             size={30}
             onPress={() => handleAddToFavorites()}
