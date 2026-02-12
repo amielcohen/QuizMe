@@ -84,7 +84,7 @@ function UserHome() {
 
           <View style={styles.heroCenter}>
             <View>
-              <UserImage imageUrl={user.imageUrl} onPress={openModal} />
+              <UserImage imageUrl={user1.profilePic} onPress={openModal} />
             </View>
 
             <Text style={styles.name}>{user1.username}</Text>
@@ -120,7 +120,7 @@ function UserHome() {
         </View>
       </View>
 
-      <ImageModal visible={isOpen} imageUrl={user.imageUrl} onClose={closeModal} />
+      <ImageModal visible={isOpen} imageUrl={user1.profilePic} onClose={closeModal} />
     </ScrollView>
   );
 }

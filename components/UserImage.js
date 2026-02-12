@@ -1,14 +1,18 @@
 import { View, Image, Pressable, StyleSheet } from 'react-native';
+import defaultImage from '../constant/images/defualtImage.png';
 
 function UserImage({ imageUrl, onPress }) {
+  const imageSource = imageUrl && imageUrl.trim() !== '' ? { uri: imageUrl } : defaultImage;
+
   return (
     <Pressable onPress={onPress}>
       <View style={styles.imageContainer}>
-        <Image source={{ uri: imageUrl }} style={styles.image} />
+        <Image source={imageSource} style={styles.image} />
       </View>
     </Pressable>
   );
 }
+
 export default UserImage;
 
 const styles = StyleSheet.create({

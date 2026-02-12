@@ -9,11 +9,11 @@ async function parseError(res) {
   }
 }
 
-export async function register({ username, email, password }) {
+export async function register({ username, email, password, profilePic }) {
   const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, email, password, profilePic }),
   });
 
   if (!res.ok) {
