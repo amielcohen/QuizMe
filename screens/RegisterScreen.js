@@ -11,9 +11,13 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+
 import { register } from '../services/authService';
+import { uploadImageToCloudinary } from '../utils/cloudinary';
 
 export default function RegisterScreen({ navigation, route }) {
   const onRegisterSuccess =
@@ -26,16 +30,15 @@ export default function RegisterScreen({ navigation, route }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [profilePicUri, setProfilePicUri] = useState(null);
 
   const [showPassword, setShowPassword] = useState(false);
 
-  // UI states
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false); // shows loader after success
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
 
-  // For focusing next input nicely
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
@@ -51,6 +54,19 @@ export default function RegisterScreen({ navigation, route }) {
 
   function isValidEmail(v) {
     return /\S+@\S+\.\S+/.test(v);
+  }
+
+  async function pickProfileImage() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled) {
+      setProfilePicUri(result.assets[0].uri);
+    }
   }
 
   async function onRegister() {
@@ -77,26 +93,30 @@ export default function RegisterScreen({ navigation, route }) {
       setIsSubmitting(true);
       setStatus('Creating your account...');
 
-      await register({ username: u, email: e, password });
+      let profilePic = null;
 
-      // Close keyboard and show "redirecting" loader with delay
+      if (profilePicUri) {
+        profilePic = await uploadImageToCloudinary(profilePicUri);
+      }
+
+      await register({
+        username: u,
+        email: e,
+        password,
+        profilePic, // 🔑 זה השדה שציינת
+      });
+
       Keyboard.dismiss();
       setIsSubmitting(false);
-      setError('');
-      setStatus('Account created! Redirecting to login...');
+      setStatus('Account created! Redirecting...');
       setIsRedirecting(true);
 
-      setTimeout(() => {
-        onRegisterSuccess();
-      }, 1200); // adjust delay here
+      setTimeout(onRegisterSuccess, 1200);
     } catch (err) {
       const msg =
         err?.response?.data?.message || err?.message || 'Registration failed. Please try again.';
       setError(msg);
       setStatus('');
-    } finally {
-      // If success, we already set isSubmitting false above
-      // If failure, we want it false here
       setIsSubmitting(false);
     }
   }
@@ -107,8 +127,6 @@ export default function RegisterScreen({ navigation, route }) {
     else navigation?.navigate?.('Login');
   }
 
-  const showOverlayLoader = isRedirecting;
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
@@ -116,107 +134,72 @@ export default function RegisterScreen({ navigation, route }) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {/* ScrollView fixes "keyboard covers fields" + keeps nice UX */}
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.card}>
-            <View style={styles.logoWrap}>
-              <View style={styles.logoCircle}>
-                <Ionicons name="person-add" size={28} color="#FFFFFF" />
-              </View>
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Sign up to start using QuizMe</Text>
-            </View>
+            {/* PROFILE IMAGE */}
+            <Pressable style={styles.avatarWrap} onPress={pickProfileImage}>
+              {profilePicUri ? (
+                <Image source={{ uri: profilePicUri }} style={styles.avatar} />
+              ) : (
+                <Ionicons name="camera-outline" size={26} color={MUTED} />
+              )}
+            </Pressable>
 
+            <Text style={styles.avatarHint}>Add profile picture (optional)</Text>
+
+            {/* FORM */}
             <View style={styles.form}>
+              {/* Username */}
               <Text style={styles.label}>Username</Text>
-              <View style={[styles.inputRow, !!error && styles.inputRowError]}>
+              <View style={styles.inputRow}>
                 <Ionicons name="person-outline" size={18} color={MUTED} />
                 <TextInput
                   value={username}
-                  onChangeText={(t) => {
-                    setUsername(t);
-                    if (error) setError('');
-                  }}
+                  onChangeText={setUsername}
                   placeholder="At least 3 characters"
                   placeholderTextColor={PLACEHOLDER}
-                  autoCapitalize="none"
-                  autoCorrect={false}
                   style={styles.input}
                   returnKeyType="next"
                   onSubmitEditing={() => emailRef.current?.focus?.()}
                 />
-                {!!username && (
-                  <Pressable
-                    onPress={() => setUsername('')}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel="Clear username"
-                  >
-                    <Ionicons name="close-circle" size={18} color={MUTED} />
-                  </Pressable>
-                )}
               </View>
 
+              {/* Email */}
               <Text style={[styles.label, { marginTop: 12 }]}>Email</Text>
-              <View style={[styles.inputRow, !!error && styles.inputRowError]}>
+              <View style={styles.inputRow}>
                 <Ionicons name="mail-outline" size={18} color={MUTED} />
                 <TextInput
                   ref={emailRef}
                   value={email}
-                  onChangeText={(t) => {
-                    setEmail(t);
-                    if (error) setError('');
-                  }}
-                  placeholder="e.g. user@example.com"
+                  onChangeText={setEmail}
+                  placeholder="user@example.com"
                   placeholderTextColor={PLACEHOLDER}
-                  autoCapitalize="none"
-                  autoCorrect={false}
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   style={styles.input}
                   returnKeyType="next"
                   onSubmitEditing={() => passwordRef.current?.focus?.()}
                 />
-                {!!email && (
-                  <Pressable
-                    onPress={() => setEmail('')}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel="Clear email"
-                  >
-                    <Ionicons name="close-circle" size={18} color={MUTED} />
-                  </Pressable>
-                )}
               </View>
 
+              {/* Password */}
               <Text style={[styles.label, { marginTop: 12 }]}>Password</Text>
-              <View style={[styles.inputRow, !!error && styles.inputRowError]}>
+              <View style={styles.inputRow}>
                 <Ionicons name="lock-closed-outline" size={18} color={MUTED} />
                 <TextInput
                   ref={passwordRef}
                   value={password}
-                  onChangeText={(t) => {
-                    setPassword(t);
-                    if (error) setError('');
-                  }}
+                  onChangeText={setPassword}
                   placeholder="At least 6 characters"
                   placeholderTextColor={PLACEHOLDER}
                   secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
                   style={styles.input}
-                  returnKeyType="done"
-                  onSubmitEditing={onRegister}
                 />
-                <Pressable
-                  onPress={() => setShowPassword((s) => !s)}
-                  hitSlop={12}
-                  accessibilityRole="button"
-                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                >
+                <Pressable onPress={() => setShowPassword((s) => !s)}>
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
@@ -231,11 +214,7 @@ export default function RegisterScreen({ navigation, route }) {
               <Pressable
                 onPress={onRegister}
                 disabled={!canSubmit}
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  !canSubmit && styles.primaryButtonDisabled,
-                  pressed && canSubmit && styles.primaryButtonPressed,
-                ]}
+                style={[styles.primaryButton, !canSubmit && styles.primaryButtonDisabled]}
               >
                 {isSubmitting ? (
                   <ActivityIndicator />
@@ -244,20 +223,16 @@ export default function RegisterScreen({ navigation, route }) {
                 )}
               </Pressable>
 
-              <Pressable onPress={goToLoginNow} style={styles.linkButton} disabled={isRedirecting}>
+              <Pressable onPress={goToLoginNow} style={styles.linkButton}>
                 <Text style={styles.linkText}>Already have an account? Log In</Text>
               </Pressable>
             </View>
           </View>
         </ScrollView>
 
-        {/* Overlay loader AFTER success, to make transition feel intentional */}
-        {showOverlayLoader && (
+        {isRedirecting && (
           <View style={styles.overlay}>
-            <View style={styles.overlayCard}>
-              <ActivityIndicator size="large" />
-              <Text style={styles.overlayText}>Finalizing your account…</Text>
-            </View>
+            <ActivityIndicator size="large" />
           </View>
         )}
       </KeyboardAvoidingView>
@@ -265,154 +240,65 @@ export default function RegisterScreen({ navigation, route }) {
   );
 }
 
-const FB_BLUE = '#1877F2';
-const FB_BLUE_DARK = '#0B5ED7';
 const BG = '#F0F4FF';
 const CARD = '#FFFFFF';
 const TEXT = '#0F172A';
 const MUTED = '#5B6B87';
 const BORDER = '#D8E2F5';
 const PLACEHOLDER = '#8FA0BD';
+const PRIMARY = '#1877F2';
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: BG,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-  },
-  card: {
-    backgroundColor: CARD,
-    borderRadius: 20,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: BORDER,
-    elevation: 3,
-  },
-  logoWrap: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  logoCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: FB_BLUE,
+  root: { flex: 1, backgroundColor: BG },
+  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 16 },
+  card: { backgroundColor: CARD, borderRadius: 20, padding: 18 },
+  avatarWrap: {
+    alignSelf: 'center',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: TEXT,
-    letterSpacing: 0.2,
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 14,
-    color: MUTED,
+  avatar: { width: 96, height: 96, borderRadius: 48 },
+  avatarHint: {
     textAlign: 'center',
-  },
-  form: {
-    marginTop: 10,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '700',
+    marginTop: 8,
     color: MUTED,
-    marginBottom: 6,
+    fontSize: 12,
   },
+  form: { marginTop: 16 },
+  label: { fontSize: 12, fontWeight: '700', color: MUTED, marginBottom: 6 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
     borderWidth: 1,
     borderColor: BORDER,
-    backgroundColor: '#F7FAFF',
     borderRadius: 14,
     paddingHorizontal: 12,
     height: 48,
+    backgroundColor: '#F7FAFF',
   },
-  inputRowError: {
-    borderColor: '#FDA29B',
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: TEXT,
-  },
-  errorText: {
-    marginTop: 10,
-    color: '#B42318',
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  statusText: {
-    marginTop: 10,
-    color: MUTED,
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
+  input: { flex: 1, fontSize: 15, color: TEXT },
+  errorText: { marginTop: 10, color: '#B42318', textAlign: 'center' },
+  statusText: { marginTop: 10, color: MUTED, textAlign: 'center' },
   primaryButton: {
-    marginTop: 14,
+    marginTop: 16,
     height: 48,
     borderRadius: 14,
-    backgroundColor: FB_BLUE,
+    backgroundColor: PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryButtonDisabled: {
-    opacity: 0.55,
-  },
-  primaryButtonPressed: {
-    backgroundColor: FB_BLUE_DARK,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 16,
-    letterSpacing: 0.2,
-  },
-  linkButton: {
-    marginTop: 12,
-    alignSelf: 'center',
-    paddingVertical: 8,
-  },
-  linkText: {
-    color: FB_BLUE,
-    fontWeight: '800',
-    fontSize: 13,
-  },
-
-  // Overlay loader
+  primaryButtonDisabled: { opacity: 0.6 },
+  primaryButtonText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  linkButton: { marginTop: 12, alignSelf: 'center' },
+  linkText: { color: PRIMARY, fontWeight: '800' },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.25)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-  },
-  overlayCard: {
-    width: '100%',
-    maxWidth: 320,
-    backgroundColor: CARD,
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: BORDER,
-    alignItems: 'center',
-    gap: 10,
-  },
-  overlayText: {
-    color: TEXT,
-    fontWeight: '800',
-    fontSize: 14,
   },
 });
