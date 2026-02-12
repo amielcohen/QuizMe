@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import { login } from '../store/redux/auth';
+import { loginRequest } from '../services/authService';
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState(''); // email or username
@@ -38,15 +39,10 @@ export default function LoginScreen({ navigation }) {
     try {
       setIsSubmitting(true);
 
-      // Simulated request (replace with your API call)
-      await new Promise((res) => setTimeout(res, 700));
-
-      dispatch(login({ token: 'dummy-token' }));
-
-      // Example navigation after login:
-      // navigation.replace('BottomTabsNavigator');
+      const { token, user } = await loginRequest({ identifier, password });
+      dispatch(login({ token, user }));
     } catch (e) {
-      setError('Login failed. Please try again.');
+      setError(e.message || 'Login failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -61,7 +57,7 @@ export default function LoginScreen({ navigation }) {
   function handleGoToRegister() {
     // Placeholder: navigate to Register screen if you add one
     // navigation.navigate('Register');
-    setError('Register screen is not implemented yet.');
+    navigation.navigate('Register');
   }
 
   return (

@@ -10,7 +10,7 @@ const authSlice = createSlice({
   },
   reducers: {
     login: (state, action) => {
-      state.token = action.payload?.token ?? 'dummy-token';
+      state.token = action.payload?.token ?? null;
       state.user = action.payload?.user ?? null;
       state.error = null;
     },
