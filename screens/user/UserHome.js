@@ -8,10 +8,12 @@ import StatItem from '../../components/StatItem';
 import { TheColor } from '../../constant/TheColor';
 import { dummyUser } from '../../data/dummy-user';
 import { Ionicons } from '@expo/vector-icons';
+import { useSelector } from 'react-redux';
 
 function UserHome() {
   const user = dummyUser; // remove this line when integrating with real data
   const [isOpen, setIsOpen] = useState(false);
+  const user1 = useSelector((state) => state.auth.user);
 
   const userTrophyUrls = [
     'https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/512px/1f3c6.png',
@@ -35,6 +37,7 @@ function UserHome() {
   }
 
   function openMessages() {
+    console.log(user1);
     alert('Messages pressed');
   }
 
@@ -84,7 +87,7 @@ function UserHome() {
               <UserImage imageUrl={user.imageUrl} onPress={openModal} />
             </View>
 
-            <Text style={styles.name}>{user.name}</Text>
+            <Text style={styles.name}>{user1.username}</Text>
           </View>
         </LinearGradient>
       </View>
