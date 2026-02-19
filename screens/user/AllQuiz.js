@@ -7,7 +7,7 @@ import { TheColor } from '../../constant/TheColor';
 function AllQuiz({ navigation }) {
   function renderCategory(itemData) {
     function pressHandler() {
-      navigation.navigate('Quiz Page', { quizId: itemData.item.id });
+      navigation.navigate('Quiz Info', { quizId: itemData.item.id });
     }
     return (
       <QuizInfoCard

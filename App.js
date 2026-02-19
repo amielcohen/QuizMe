@@ -19,7 +19,9 @@ import UserHome from './screens/user/UserHome';
 import AllQuiz from './screens/user/AllQuiz';
 import FavouritesQuiz from './screens/user/FavouritesQuiz';
 import MyQuiz from './screens/user/MyQuiz';
+import QuizInfo from './screens/user/QuizInfo';
 import QuizPage from './screens/user/QuizPage';
+import QuizSummary from './screens/user/QuizSummary';
 
 const Stack = createNativeStackNavigator();
 const BottomTabs = createBottomTabNavigator();
@@ -101,7 +103,9 @@ function AppStack() {
         component={BottomTabsNavigator}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="Quiz Info" component={QuizInfo} />
       <Stack.Screen name="Quiz Page" component={QuizPage} />
+      <Stack.Screen name="Quiz Summary" component={QuizSummary} />
     </Stack.Navigator>
   );
 }
