@@ -78,4 +78,14 @@ export const QuizInfos = [
     4,
     'raul',
   ),
+  new QuizInfo(
+    'quiz_mon',
+    'Digimon',
+    '#d9d0f0ff',
+    'https://i.ebayimg.com/images/g/bKMAAOSw9gZkillI/s-l1200.jpg',
+
+    ['Digimon', 'Fantasy', 'Anime'],
+    2,
+    'amitco',
+  ),
 ];
