@@ -1,149 +1,224 @@
-import { Text, Button, View, StyleSheet, Image, ScrollView } from 'react-native';
-import { QuizInfos } from '../../data/dummy-quizInfo';
+import { View, Text, StyleSheet, StatusBar, Modal, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import QuestionCard from '../../components/QuestionCard';
+import AnswerCard from '../../components/AnswerCard';
 import { TheColor } from '../../constant/TheColor';
-import {
-  getTextColorForBackground,
-  getComplementaryColor,
-  lightenColor,
-} from '../../utils/color-manipulations';
-import Tag from '../../components/Tag';
-import PrimeButton from '../../components/PrimeButtom';
-import { Ionicons } from '@expo/vector-icons';
-import { use, useState } from 'react';
-import StatItem from '../../components/StatItem';
+import { questions as allData } from '../../data/dummy-questions';
+import { QuizInfos } from '../../data/dummy-quizInfo';
+
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addFavourite, removeFavourite } from '../../store/redux/favourite';
+import { initQuizIfNeeded, resetQuizSession, selectAnswer, goNext } from '../../store/redux/quiz';
 
 function QuizPage({ route, navigation }) {
-  const quizId = route.params.quizId;
-  const quiz = QuizInfos.find((q) => q.id === quizId);
-  const textColor = getTextColorForBackground(quiz.color);
-  const tagBackgroundColor = getComplementaryColor(quiz.color);
-  const infoBackgroundColor = lightenColor(quiz.color);
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const stats = [
-    { label: 'Creat By:', value: quiz.createdBy, icon: 'person-outline' },
-    { label: 'Questions:', value: quiz.questionCount, icon: 'help' },
-    { label: 'Best Score:', value: 1 + '/' + quiz.questionCount, icon: 'game-controller-outline' },
-  ];
-
-  const favouriteQuizIds = useSelector((stats) => stats.favouriteQuiz.ids);
-  const quizIsFavourite = favouriteQuizIds.includes(quizId);
-
+  const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
+  const { quizId } = route?.params;
 
-  function handleStartQuiz() {
-    //navigation.navigate('QuizScreen', { quizId: quiz.id });
-    console.log('Start Quiz button pressed');
+  const quizQuestions = useMemo(() => allData.filter((q) => q.quizInfoId === quizId), [quizId]);
+  const quiz = QuizInfos.find((q) => q.id === quizId);
+
+  const quizLength = quizQuestions.length;
+
+  const session = useSelector((state) => state.quiz.sessionsByQuizId[quizId]);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+
+  // Initial Logic: Run only once on mount
+  useEffect(() => {
+    if (session) {
+      const hasProgress =
+        session.currentIndex > 0 || Object.keys(session.answeredByIndex).length > 0;
+      if (hasProgress && !session.finished) {
+        setShowResumeModal(true);
+      }
+    } else {
+      dispatch(
+        initQuizIfNeeded({
+          quizId,
+          questions: quizQuestions,
+          title: quiz.title,
+          color: quiz.color,
+        }),
+      );
+    }
+  }, []); // Empty dependency array ensures this runs once
+
+  // Handle Quiz End
+  useEffect(() => {
+    if (session?.finished) {
+      const timer = setTimeout(() => {
+        navigation.replace('Quiz Summary', {
+          quizId,
+          correctCount: session.correctCount,
+          quizLength,
+        });
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [session?.finished, navigation, quizId, session?.correctCount, quizLength]);
+
+  if (!session) return null;
+
+  const currentIndex = session.currentIndex;
+  const currentQuestion = quizQuestions[currentIndex];
+  const currentAnswers = session.shuffledAnswersByIndex[currentIndex];
+  const currentAnswered = session.answeredByIndex[currentIndex];
+  const selectedAnswerId = currentAnswered?.selectedAnswerId;
+
+  const percent = session?.finished ? 100 : Math.round((currentIndex / quizLength) * 100);
+  function handlePick(answer) {
+    if (selectedAnswerId !== undefined) return;
+
+    dispatch(
+      selectAnswer({
+        quizId,
+        questionIndex: currentIndex,
+        selectedAnswerId: answer.text,
+        isCorrect: answer.isCorrect,
+      }),
+    );
+
+    setTimeout(() => {
+      dispatch(goNext({ quizId, quizLength }));
+    }, 700);
   }
 
-  function handleAddToFavorites() {
-    console.log('Add to Favorites button pressed');
-    if (quizIsFavourite) {
-      console.log('Remove Favorites');
-      dispatch(removeFavourite({ id: quizId }));
-      setIsFavorite(false);
-    } else {
-      console.log('Add Favorites');
-      dispatch(addFavourite({ id: quizId }));
-      setIsFavorite(true);
+  function getVariantForAnswer(answerText, isCorrect) {
+    if (selectedAnswerId === undefined) return 'default';
+    if (answerText === selectedAnswerId) {
+      return isCorrect ? 'correct' : 'wrong';
     }
+    return 'disabled';
   }
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.quizInfoContainer, { backgroundColor: quiz.color }]}>
-        <View style={{ position: 'absolute', top: 16, right: 16 }}>
-          <Ionicons
-            name={quizIsFavourite ? 'heart' : 'heart-outline'}
-            color={textColor}
-            size={30}
-            onPress={() => handleAddToFavorites()}
-          />
-        </View>
-        <Text style={[styles.title, { color: textColor }]}>{quiz.title}</Text>
+    <View
+      style={[
+        styles.screen,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          paddingLeft: insets.left + 20,
+          paddingRight: insets.right + 20,
+        },
+      ]}
+    >
+      <StatusBar barStyle="dark-content" />
 
-        <Image source={{ uri: quiz.imageUrl }} style={styles.image} />
-        <View style={styles.tagsContainer}>
-          {quiz.tags.map((tag) => (
-            <Tag
-              key={tag}
-              color={getTextColorForBackground(tagBackgroundColor)}
-              backgroundColor={tagBackgroundColor}
-              text={tag}
-            />
-          ))}
+      <Modal transparent visible={showResumeModal} animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Resume quiz?</Text>
+            <Text style={styles.modalText}>
+              You already started this quiz. Do you want to continue from where you left off or
+              start over?
+            </Text>
+            <View style={styles.modalButtonsRow}>
+              <Pressable
+                style={[styles.modalBtn, styles.modalBtnSecondary]}
+                onPress={() => {
+                  dispatch(resetQuizSession({ quizId }));
+                  dispatch(
+                    initQuizIfNeeded({
+                      quizId,
+                      questions: quizQuestions,
+                      title: quiz.title,
+                      color: quiz.color,
+                    }),
+                  );
+                  setShowResumeModal(false);
+                }}
+              >
+                <Text style={[styles.modalBtnText, styles.modalBtnTextSecondary]}>Start over</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.modalBtn, styles.modalBtnPrimary]}
+                onPress={() => setShowResumeModal(false)}
+              >
+                <Text style={[styles.modalBtnText, styles.modalBtnTextPrimary]}>Continue</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
-        <View
-          style={[
-            styles.infoContainer,
-            { borderColor: textColor, backgroundColor: infoBackgroundColor },
-          ]}
-        >
-          {stats.map((s) => (
-            <View key={s.label} style={{ marginBottom: 8 }}>
-              <StatItem label={s.label} value={s.value} icon={s.icon} />
+      </Modal>
+
+      <View style={styles.header}>
+        <View style={styles.headerInfo}>
+          <Text style={styles.title}>Quiz Challenge</Text>
+          <Text style={styles.meta}>
+            Question {currentIndex + 1} of {quizLength}
+          </Text>
+        </View>
+        <View style={styles.progressContainer}>
+          <View style={[styles.progressFill, { width: `${percent}%` }]} />
+        </View>
+      </View>
+
+      <View style={styles.questionArea}>
+        <QuestionCard question={currentQuestion.question} />
+      </View>
+
+      <View style={styles.answersArea}>
+        <View style={styles.grid}>
+          {currentAnswers.map((answer) => (
+            <View key={answer.text} style={styles.cell}>
+              <AnswerCard
+                text={answer.text}
+                variant={getVariantForAnswer(answer.text, answer.isCorrect)}
+                disabled={selectedAnswerId !== undefined}
+                onPress={() => handlePick(answer)}
+              />
             </View>
           ))}
-        </View>
-        <View style={{ flex: 1 }} />
-        <View style={styles.startButtonContainer}>
-          <PrimeButton onPress={handleStartQuiz} text="Start Quiz" color={TheColor.primary100} />
         </View>
       </View>
     </View>
   );
 }
-export default QuizPage;
 
+// Styles remain identical to your original code...
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: TheColor.primary400,
-  },
-  quizInfoContainer: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 16,
-    margin: 16,
-    marginVertical: 32,
-    marginBottom: 70,
-    borderRadius: 18,
-    elevation: 4,
-    borderWidth: 1.5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    margin: 16,
-  },
-  image: {
-    width: 200,
-    height: 200,
-    marginBottom: 8,
-    borderColor: 'black',
-    borderWidth: 2,
-    borderRadius: 12,
-  },
-  tagsContainer: {
+  screen: { flex: 1, backgroundColor: '#F8FAFC' },
+  header: { marginTop: 10, marginBottom: 25 },
+  headerInfo: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 12,
+  },
+  title: { fontSize: 22, fontWeight: '900', color: '#1E293B' },
+  meta: { fontSize: 14, fontWeight: '700', color: '#94A3B8' },
+  progressContainer: { height: 6, backgroundColor: '#E2E8F0', borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: TheColor.primary300, borderRadius: 3 },
+  questionArea: { flex: 0.45, justifyContent: 'center' },
+  answersArea: { flex: 0.55, paddingTop: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  cell: { width: '48%' },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  infoContainer: {
-    width: '90%',
-    marginTop: 12,
-    borderWidth: 1.5,
-    borderRadius: 8,
-    padding: 8,
-    paddingVertical: 10,
+  modalCard: { width: '100%', borderRadius: 18, backgroundColor: '#FFFFFF', padding: 18 },
+  modalTitle: { fontSize: 18, fontWeight: '900', color: '#0F172A', marginBottom: 8 },
+  modalText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+    lineHeight: 20,
+    marginBottom: 14,
   },
-  infoText: {
-    fontSize: 18,
-    marginVertical: 4,
-  },
-  startButtonContainer: {
-    marginTop: 10,
-  },
+  modalButtonsRow: { flexDirection: 'row', gap: 10, justifyContent: 'flex-end' },
+  modalBtn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, borderWidth: 2 },
+  modalBtnPrimary: { backgroundColor: TheColor.primary300, borderColor: TheColor.primary300 },
+  modalBtnSecondary: { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+  modalBtnText: { fontSize: 14, fontWeight: '900' },
+  modalBtnTextPrimary: { color: '#FFFFFF' },
+  modalBtnTextSecondary: { color: '#0F172A' },
 });
+
+export default QuizPage;
