@@ -2,13 +2,14 @@ import { Text, View, FlatList, StyleSheet } from 'react-native';
 import { QuizInfos } from '../../data/dummy-quizInfo';
 import QuizInfoCard from '../../components/QuizInfoCard';
 import Filter from '../../components/Filter';
-import { TheColor } from '../../constant/TheColor';
+import { useTheme } from '../../theme/useTheme';
 
 function AllQuiz({ navigation }) {
   const formattedData = [...QuizInfos];
   if (formattedData.length % 2 !== 0) {
     formattedData.push({ id: 'blank-item', empty: true });
   }
+  const { colors } = useTheme();
 
   function renderCategory({ item }) {
     if (item.empty) {
@@ -36,7 +37,7 @@ function AllQuiz({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary400 }]}>
       <View style={styles.filterContainer}>
         <Filter onPress={filterPressHandler} />
       </View>
@@ -58,7 +59,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 6,
-    backgroundColor: TheColor.primary400,
   },
   filterContainer: {
     marginBottom: 2,

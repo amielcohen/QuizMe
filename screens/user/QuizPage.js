@@ -2,10 +2,9 @@ import { View, Text, StyleSheet, StatusBar, Modal, Pressable } from 'react-nativ
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import QuestionCard from '../../components/QuestionCard';
 import AnswerCard from '../../components/AnswerCard';
-import { TheColor } from '../../constant/TheColor';
 import { questions as allData } from '../../data/dummy-questions';
 import { QuizInfos } from '../../data/dummy-quizInfo';
-
+import { useTheme } from '../../theme/useTheme';
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { initQuizIfNeeded, resetQuizSession, selectAnswer, goNext } from '../../store/redux/quiz';
@@ -22,7 +21,7 @@ function QuizPage({ route, navigation }) {
 
   const session = useSelector((state) => state.quiz.sessionsByQuizId[quizId]);
   const [showResumeModal, setShowResumeModal] = useState(false);
-
+  const { colors } = useTheme();
   // Initial Logic: Run only once on mount
   useEffect(() => {
     if (session) {
@@ -134,7 +133,11 @@ function QuizPage({ route, navigation }) {
               </Pressable>
 
               <Pressable
-                style={[styles.modalBtn, styles.modalBtnPrimary]}
+                style={[
+                  styles.modalBtn,
+
+                  { backgroundColor: colors.primary300, borderColor: colors.primary300 },
+                ]}
                 onPress={() => setShowResumeModal(false)}
               >
                 <Text style={[styles.modalBtnText, styles.modalBtnTextPrimary]}>Continue</Text>
@@ -152,7 +155,12 @@ function QuizPage({ route, navigation }) {
           </Text>
         </View>
         <View style={styles.progressContainer}>
-          <View style={[styles.progressFill, { width: `${percent}%` }]} />
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${percent}%`, backgroundColor: colors.primary300 },
+            ]}
+          />
         </View>
       </View>
 
@@ -191,7 +199,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '900', color: '#1E293B' },
   meta: { fontSize: 14, fontWeight: '700', color: '#94A3B8' },
   progressContainer: { height: 6, backgroundColor: '#E2E8F0', borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: TheColor.primary300, borderRadius: 3 },
+  progressFill: { height: '100%', borderRadius: 3 },
   questionArea: { flex: 0.45, justifyContent: 'center' },
   answersArea: { flex: 0.55, paddingTop: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
@@ -214,7 +222,6 @@ const styles = StyleSheet.create({
   },
   modalButtonsRow: { flexDirection: 'row', gap: 10, justifyContent: 'flex-end' },
   modalBtn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, borderWidth: 2 },
-  modalBtnPrimary: { backgroundColor: TheColor.primary300, borderColor: TheColor.primary300 },
   modalBtnSecondary: { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
   modalBtnText: { fontSize: 14, fontWeight: '900' },
   modalBtnTextPrimary: { color: '#FFFFFF' },

@@ -20,8 +20,14 @@ const authSlice = createSlice({
       state.status = 'idle';
       state.error = null;
     },
+    setUserColorCustomization: (state, action) => {
+      if (state.user) {
+        state.user.Color_Customization = action.payload;
+      }
+    },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, setUserColorCustomization } = authSlice.actions;
+
 export default authSlice.reducer;

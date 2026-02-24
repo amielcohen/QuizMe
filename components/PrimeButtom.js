@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Platform } from 'react-native';
-import { TheColor } from '../constant/TheColor';
+import { useTheme } from '../theme/useTheme';
 
 function PrimeButton({
   onPress,
   text,
-  color = TheColor.primary100,
+  color,
   textColor = 'white',
   disabled = false,
   loading = false,
@@ -12,7 +12,8 @@ function PrimeButton({
   size = 20,
 }) {
   const isDisabled = disabled || loading;
-
+  const { colors } = useTheme();
+  if (!color) color = colors.primary100;
   return (
     <Pressable
       onPress={onPress}

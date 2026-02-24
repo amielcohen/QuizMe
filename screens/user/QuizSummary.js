@@ -2,16 +2,16 @@ import { Text, View, StyleSheet, StatusBar } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 
-import { TheColor } from '../../constant/TheColor';
 import { getTextColorForBackground, lightenColor } from '../../utils/color-manipulations';
 import StatItem from '../../components/StatItem';
 import PrimeButton from '../../components/PrimeButtom';
 import { resetQuizSession } from '../../store/redux/quiz';
+import { useTheme } from '../../theme/useTheme';
 
 function QuizSummary({ route, navigation }) {
   const { quizId } = route.params;
   const dispatch = useDispatch();
-
+  const { colors } = useTheme();
   const session = useSelector((state) => state.quiz.sessionsByQuizId[quizId]);
 
   if (!session) {
@@ -21,7 +21,7 @@ function QuizSummary({ route, navigation }) {
         <PrimeButton
           onPress={() => navigation.navigate('BottomTabsNavigator')}
           text="Back to Home"
-          color={TheColor.primary100}
+          color={colors.primary100}
         />
       </View>
     );
@@ -61,7 +61,7 @@ function QuizSummary({ route, navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary400 }]}>
       <StatusBar barStyle="light-content" />
 
       <View style={[styles.quizInfoContainer, { backgroundColor: quizColor }]}>
@@ -94,10 +94,10 @@ function QuizSummary({ route, navigation }) {
 
         <View style={styles.buttonRow}>
           <View style={{ flex: 1, marginRight: 8 }}>
-            <PrimeButton onPress={handleRestart} text="Restart" color={TheColor.primary200} />
+            <PrimeButton onPress={handleRestart} text="Restart" color={colors.primary200} />
           </View>
           <View style={{ flex: 1 }}>
-            <PrimeButton onPress={handleBackToHome} text="Finish" color={TheColor.primary100} />
+            <PrimeButton onPress={handleBackToHome} text="Finish" color={colors.primary100} />
           </View>
         </View>
       </View>
@@ -110,7 +110,6 @@ export default QuizSummary;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: TheColor.primary400,
     justifyContent: 'center',
   },
   quizInfoContainer: {

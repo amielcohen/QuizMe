@@ -1,12 +1,11 @@
 import { View, TextInput, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useRef } from 'react';
-import { TheColor } from '../constant/TheColor';
-
+import { useTheme } from '../theme/useTheme';
 function Filter({ onPress }) {
   const [text, setText] = useState('');
   const inputRef = useRef(null);
-
+  const { colors } = useTheme();
   function handlePress() {
     onPress?.(text);
     setText('');
@@ -14,7 +13,7 @@ function Filter({ onPress }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary300 }]}>
       <TextInput
         ref={inputRef}
         placeholder="Search..."
@@ -37,7 +36,6 @@ export default Filter;
 const styles = StyleSheet.create({
   container: {
     height: 36,
-    backgroundColor: TheColor.primary300,
     borderRadius: 6,
     flexDirection: 'row',
     alignItems: 'center',
