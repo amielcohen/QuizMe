@@ -1,6 +1,8 @@
 import { View, Pressable, Text, StyleSheet, Image } from 'react-native';
-import { TheColor } from '../constant/TheColor';
+import { useTheme } from '../theme/useTheme';
+
 function QuizInfoCard({ title, imageUrl, tags, questionCount, createdBy, onPress }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
       <Pressable
@@ -9,8 +11,13 @@ function QuizInfoCard({ title, imageUrl, tags, questionCount, createdBy, onPress
         onPress={onPress}
       >
         <View style={styles.container}>
-          <View style={styles.card}>
-            <View style={styles.titleContainer}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.primary300, borderColor: colors.primary200 },
+            ]}
+          >
+            <View style={[styles.titleContainer, { backgroundColor: colors.primary200 }]}>
               <Text style={styles.title}>{title}</Text>
             </View>
             <View style={styles.imageContainer}>
@@ -35,15 +42,12 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     marginBottom: 8,
-    backgroundColor: TheColor.primary200,
   },
   card: {
-    backgroundColor: TheColor.primary300,
     padding: 12,
     borderRadius: 8,
     justifyContent: 'center',
     elevation: 4,
-    borderColor: TheColor.primary200,
     borderWidth: 2,
   },
   image: {

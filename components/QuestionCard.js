@@ -1,18 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { TheColor } from '../constant/TheColor';
+import { useTheme } from '../theme/useTheme';
 
 const { width } = Dimensions.get('window');
 
 function QuestionCard({ question }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[TheColor.primary200, TheColor.primary300]}
+        colors={[colors.primary200, colors.primary300]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.card}
+        style={[styles.card, { shadowColor: colors.primary300 }]}
       >
         {/* אלמנט עיצובי ברקע */}
         <View style={styles.circleDecoration} />
@@ -40,7 +41,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     elevation: 12,
-    shadowColor: TheColor.primary300,
     shadowOpacity: 0.4,
     shadowRadius: 15,
     shadowOffset: { width: 0, height: 8 },

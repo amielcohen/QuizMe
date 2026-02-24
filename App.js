@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View, Platform, Button, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { TheColor } from './constant/TheColor';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -10,7 +9,9 @@ import { Provider, useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { store } from './store/redux/store';
 import { logout } from './store/redux/auth';
-
+//context
+import { ThemeProvider } from './theme/ThemeContext';
+import { useTheme } from './theme/useTheme';
 //screens import
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
@@ -22,6 +23,7 @@ import MyQuiz from './screens/user/MyQuiz';
 import QuizInfo from './screens/user/QuizInfo';
 import QuizPage from './screens/user/QuizPage';
 import QuizSummary from './screens/user/QuizSummary';
+import ColorCustomization from './screens/user/ColorCustomization';
 
 const Stack = createNativeStackNavigator();
 const BottomTabs = createBottomTabNavigator();
@@ -37,18 +39,18 @@ function AuthStack() {
 
 function BottomTabsNavigator() {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
 
   return (
     <BottomTabs.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: TheColor.primary100 },
+        headerStyle: { backgroundColor: colors.primary100 },
         headerTintColor: 'white',
         tabBarStyle: { backgroundColor: 'white' },
-        tabBarActiveTintColor: TheColor.primary100,
+        tabBarActiveTintColor: colors.primary100,
         headerTitleStyle: { fontWeight: 'bold' },
         headerTitleAlign: 'center',
         headerRight: () => (
-          // may move logout button to other place
           <Pressable onPress={() => dispatch(logout())} style={{ paddingHorizontal: 14 }}>
             <Ionicons name="log-out-outline" size={22} color="white" />
           </Pressable>
@@ -89,10 +91,12 @@ function BottomTabsNavigator() {
 }
 
 function AppStack() {
+  const { colors } = useTheme();
+
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: TheColor.primary100 },
+        headerStyle: { backgroundColor: colors.primary100 },
         headerTintColor: 'white',
         headerTitleStyle: { fontWeight: 'bold' },
         headerTitleAlign: 'center',
@@ -106,6 +110,7 @@ function AppStack() {
       <Stack.Screen name="Quiz Info" component={QuizInfo} />
       <Stack.Screen name="Quiz Page" component={QuizPage} />
       <Stack.Screen name="Quiz Summary" component={QuizSummary} />
+      <Stack.Screen name="Color Customization" component={ColorCustomization} />
     </Stack.Navigator>
   );
 }
@@ -118,10 +123,12 @@ function RootNavigator() {
 export default function App() {
   return (
     <Provider store={store}>
-      <StatusBar style="light" />
-      <NavigationContainer>
-        <RootNavigator />
-      </NavigationContainer>
+      <ThemeProvider>
+        <StatusBar style="light" />
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </ThemeProvider>
     </Provider>
   );
 }

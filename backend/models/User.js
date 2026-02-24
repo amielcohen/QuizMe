@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema(
       default: 'user',
     },
     profilePic: { type: String, default: '' },
+    Color_Customization: { type: String, default: 'Aqua Mint' },
   },
   { timestamps: true },
 );

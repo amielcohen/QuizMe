@@ -36,6 +36,7 @@ exports.register = async (req, res) => {
         email: user.email,
         role: user.role,
         profilePic: user.profilePic,
+        colorCustomization: user.Color_Customization,
       },
     });
   } catch (err) {
@@ -77,6 +78,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         profilePic: user.profilePic,
+        Color_Customization: user.Color_Customization,
       },
     });
   } catch (err) {

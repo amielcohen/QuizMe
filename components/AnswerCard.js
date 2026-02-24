@@ -1,8 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { TheColor } from '../constant/TheColor';
+import { useTheme } from '../theme/useTheme';
 
 function AnswerCard({ text, onPress, variant = 'default', disabled = false }) {
+  const { colors } = useTheme();
+  const dynamicColors = {
+    selected: {
+      borderColor: colors.primary300,
+      shadowColor: colors.primary300,
+      textColor: colors.primary300,
+      dotColor: colors.primary300,
+    },
+    correct: { borderColor: '#22C55E', textColor: '#16A34A' },
+    wrong: { borderColor: '#EF4444', textColor: '#DC2626' },
+    default: { borderColor: 'rgba(226, 232, 240, 0.8)', textColor: '#475569' },
+  };
+
+  const currentTheme = dynamicColors[variant] || dynamicColors.default;
+
   return (
     <Pressable
       onPress={onPress}
@@ -12,34 +27,34 @@ function AnswerCard({ text, onPress, variant = 'default', disabled = false }) {
         pressed && !disabled && { transform: [{ scale: 0.96 }] },
       ]}
     >
-      <View style={[styles.card, stylesByVariant[variant]]}>
-        <Text style={[styles.text, textByVariant[variant]]}>{text}</Text>
-        {variant === 'selected' && <View style={styles.activeDot} />}
+      <View
+        style={[
+          styles.card,
+          stylesByVariant[variant],
+          { borderColor: currentTheme.borderColor, shadowColor: currentTheme.shadowColor },
+        ]}
+      >
+        <Text style={[styles.text, textByVariant[variant], { color: currentTheme.textColor }]}>
+          {text}
+        </Text>
+
+        {variant === 'selected' && (
+          <View style={[styles.activeDot, { backgroundColor: currentTheme.dotColor }]} />
+        )}
       </View>
     </Pressable>
   );
 }
 
 const stylesByVariant = StyleSheet.create({
-  default: {
-    backgroundColor: '#FFFFFF',
-    borderColor: 'rgba(226, 232, 240, 0.8)',
-  },
+  default: { backgroundColor: '#FFFFFF' },
   selected: {
     backgroundColor: '#FFFFFF',
-    borderColor: TheColor.primary300,
-    shadowColor: TheColor.primary300,
     shadowOpacity: 0.2,
     elevation: 6,
   },
-  correct: {
-    backgroundColor: 'rgba(34, 197, 94, 0.10)',
-    borderColor: '#22C55E',
-  },
-  wrong: {
-    backgroundColor: 'rgba(239, 68, 68, 0.10)',
-    borderColor: '#EF4444',
-  },
+  correct: { backgroundColor: 'rgba(34, 197, 94, 0.10)' },
+  wrong: { backgroundColor: 'rgba(239, 68, 68, 0.10)' },
   disabled: {
     backgroundColor: '#FFFFFF',
     borderColor: 'rgba(226, 232, 240, 0.8)',
@@ -48,10 +63,10 @@ const stylesByVariant = StyleSheet.create({
 });
 
 const textByVariant = StyleSheet.create({
-  default: { color: '#475569' },
-  selected: { color: TheColor.primary300, fontWeight: '800' },
-  correct: { color: '#16A34A', fontWeight: '800' },
-  wrong: { color: '#DC2626', fontWeight: '800' },
+  default: { fontWeight: '700' },
+  selected: { fontWeight: '800' },
+  correct: { fontWeight: '800' },
+  wrong: { fontWeight: '800' },
   disabled: { color: '#64748B' },
 });
 
@@ -77,7 +92,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    fontWeight: '700',
     textAlign: 'center',
   },
   activeDot: {
@@ -86,7 +100,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: TheColor.primary300,
   },
 });
 

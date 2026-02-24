@@ -1,6 +1,7 @@
 import { Text, Button, View, StyleSheet, Image, ScrollView } from 'react-native';
 import { QuizInfos } from '../../data/dummy-quizInfo';
-import { TheColor } from '../../constant/TheColor';
+import { useTheme } from '../../theme/useTheme';
+
 import {
   getTextColorForBackground,
   getComplementaryColor,
@@ -21,6 +22,7 @@ function QuizInfo({ route, navigation }) {
   const tagBackgroundColor = getComplementaryColor(quiz.color);
   const infoBackgroundColor = lightenColor(quiz.color);
   const [isFavorite, setIsFavorite] = useState(false);
+  const { colors } = useTheme();
 
   const stats = [
     { label: 'Creat By:', value: quiz.createdBy, icon: 'person-outline' },
@@ -52,7 +54,7 @@ function QuizInfo({ route, navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary400 }]}>
       <View style={[styles.quizInfoContainer, { backgroundColor: quiz.color }]}>
         <View style={{ position: 'absolute', top: 16, right: 16 }}>
           <Ionicons
@@ -89,7 +91,7 @@ function QuizInfo({ route, navigation }) {
         </View>
         <View style={{ flex: 1 }} />
         <View style={styles.startButtonContainer}>
-          <PrimeButton onPress={handleStartQuiz} text="Start Quiz" color={TheColor.primary100} />
+          <PrimeButton onPress={handleStartQuiz} text="Start Quiz" color={colors.primary100} />
         </View>
       </View>
     </View>
@@ -100,7 +102,6 @@ export default QuizInfo;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: TheColor.primary400,
   },
   quizInfoContainer: {
     flex: 1,

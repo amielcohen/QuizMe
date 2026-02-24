@@ -1,11 +1,12 @@
 import { View, Image, StyleSheet } from 'react-native';
 import { TheColor } from '../constant/TheColor';
+import { useTheme } from '../theme/useTheme';
 
 function TrophyIcon({ tropyUrl }) {
   if (typeof tropyUrl !== 'string' || tropyUrl.trim() === '') return null;
-
+  const { colors } = useTheme();
   return (
-    <View style={styles.iconContainer}>
+    <View style={[styles.iconContainer, { borderColor: colors.primary200 }]}>
       <Image source={{ uri: tropyUrl }} style={styles.icon} />
     </View>
   );
@@ -21,7 +22,6 @@ const styles = StyleSheet.create({
     margin: 8,
     borderRadius: 40,
     borderWidth: 1,
-    borderColor: TheColor.primary200,
     overflow: 'hidden',
     backgroundColor: '#ccc',
     shadowColor: '#000',
